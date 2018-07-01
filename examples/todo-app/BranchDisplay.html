@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>VueFire Todo App Demo</title>
+  <script src="https://www.gstatic.com/firebasejs/4.11.0/firebase.js"></script>
+  <script src="https://unpkg.com/vue/dist/vue.js"></script>
+  <script src="../../dist/vuefire.js"></script>
+</head>
+
+<body>
+
+  <div id="app">
+    <h1>已售完</h1>
+    <ul>
+      <li v-if="product.status == true" v-for="product in Products">
+        <label>{{product.name}}</label>
+        <label>{{getStatusString(product.status)}}</label>
+      </li>
+    </ul>
+    <h1>鮮魚</h1>
+    <ul>
+      <li v-if="product.status == false" v-for="product in Products">
+        <label>{{product.name}}</label>
+        <label>{{getStatusString(product.status)}}</label>
+      </li>
+    </ul>
+
+  </div>
+
+  <script>
+    /* global Vue, firebase */
+
+    var config = {
+      apiKey: 'AIzaSyA9Ulhm28m7asgKRB_OEWkNWSyT3L9hseY',
+      authDomain: 'test-25e2a.firebaseapp.com',
+      databaseURL: 'https://test-25e2a.firebaseio.com',
+      projectId: 'test-25e2a',
+      storageBucket: 'test-25e2a.appspot.com',
+      messagingSenderId: '865495557037'
+    }
+
+    var db = firebase.initializeApp(config).database()
+    var productRef = db.ref('Products')
+    var fishesRef = db.ref('Fishes')
+
+    new Vue({
+      el: '#app',
+      data: {
+        newProductText: ''
+      },
+      firebase: {
+        Products: productRef.limitToLast(25),
+        Fishes: fishesRef.limitToLast(25)
+      },
+      methods: {
+        updateStatus: function (product) {
+          productRef.child(product['.key']).child('status').set(!product.status)
+        },
+        getStatusString: function (status) {
+          if (status) {
+            return '完售'
+          } else {
+            return '未完售'
+          }
+        }
+      }
+    })
+  </script>
+</body>
+
+</html>

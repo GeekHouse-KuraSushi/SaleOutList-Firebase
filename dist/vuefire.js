@@ -1,14 +1,4 @@
-(function webpackUniversalModuleDefinition(root, factory) {
-	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory();
-	else if(typeof define === 'function' && define.amd)
-		define([], factory);
-	else if(typeof exports === 'object')
-		exports["VueFire"] = factory();
-	else
-		root["VueFire"] = factory();
-})(this, function() {
-return /******/ (function(modules) { // webpackBootstrap
+/******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
 
@@ -52,7 +42,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	var Vue // late binding
 
@@ -102,10 +92,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	function createRecord (snapshot) {
 	  var value = snapshot.val()
-	  var res = isObject(value)
-	    ? value
-	    : { '.value': value }
-	  res['.key'] = _getKey(snapshot)
+	  var res
+	  if (isObject(value)) {
+	    res = value
+	  } else {
+	    res = {}
+	    Object.defineProperty(res, '.value', {
+	      value: value
+	    })
+	  }
+	  Object.defineProperty(res, '.key', {
+	    value: _getKey(snapshot)
+	  })
 	  return res
 	}
 
@@ -309,10 +307,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  Vue = _Vue
 	  Vue.mixin(VueFireMixin)
 
-	  // use object-based merge strategy
-	  // TODO This makes impossible to merge functions
 	  var mergeStrats = Vue.config.optionMergeStrategies
-	  mergeStrats.firebase = mergeStrats.methods
+	  mergeStrats.firebase = mergeStrats.provide
 
 	  // extend instance methods
 	  Vue.prototype.$bindAsObject = function (key, source, cancelCallback, readyCallback) {
@@ -348,7 +344,5 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = install
 
 
-/***/ }
-/******/ ])
-});
-;
+/***/ })
+/******/ ]);
