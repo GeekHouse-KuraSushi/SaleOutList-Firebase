@@ -27,6 +27,7 @@
         <ul>
             <li v-if="!Product.isSaleOut" v-for="Product in showProducts">
                 <label>{{Product.name}}</label>
+                <button @click="updateStatus(Product)">X</button>
             </li>
         </ul>
         <h1>所有商品</h1>
@@ -77,6 +78,13 @@
                     this.currentBranch = this.Branches.find(function (Branch) {
                         return Branch.name == self.branchName;
                     });
+                    if (this.currentBranch == undefined) {
+                        this.InitBranchProduct();
+                        var self = this;
+                        this.currentBranch = this.Branches.find(function (Branch) {
+                            return Branch.name == self.branchName;
+                        });
+                    }
                     this.currentBranch.saleOutList = this.currentBranch.saleOutList.split(',');
                 },
                 BranchList() {
@@ -86,11 +94,10 @@
                     this.productList = this.Branches[this.branchName];
 
                 },
-                InitBranchProduct(branchName) {
-                    var productList = this.Products.map(x => x.id).join();
+                InitBranchProduct() {
                     branchRef.push({
-                        name: branchName,
-                        saleOutList: productList
+                        name: this.branchName,
+                        saleOutList: ""
                     })
                 },
                 setShowProducts() {
@@ -101,8 +108,16 @@
                         isSaleOut: this.currentBranch.saleOutList.includes(Product.id)
                     }));
                 },
-                updateStatus(Product) {
-                    Product.isSaleOut = !Product.isSaleOut;
+                updateStatus(branch) {
+
+                    this.showProducts[this.showProducts.indexOf(branch)].isSaleOut = !this.showProducts[this.showProducts
+                        .indexOf(branch)].isSaleOut;
+                    var newList = this.showProducts.filter(function (product) {
+                        return product.isSaleOut;
+                    });
+
+                    var listString = newList.map(x => x.id).join();
+                    branchRef.child(this.currentBranch['.key']).child('saleOutList').set(listString)
                 },
                 getStatusString(status) {
                     if (status) {
