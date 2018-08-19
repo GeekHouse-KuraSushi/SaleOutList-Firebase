@@ -17,15 +17,19 @@
         </div>
     </header>
     <div id="app">
+        <div id="searchArea">
+            <input v-model.trim="branchName" placeholder="Branches Name ">
+            <button v-on:click="getBranchProduct">search</button>
+        </div>
         <section class="sold-out-wrapper">
             <div class="title-wrap">
                 <h1>本日已售完</h1>
             </div>
             <div class="product-wrap">
-                <div class="product-card" v-if="product.status == true" v-for="product in Products">
-                    <img src="../../assets/demo-p-1.jpg" :alt="product.name">
+                <div class="product-card" v-if="Product.isSaleOut" v-for="Product in showProducts">
+                    <img src="../../assets/demo-p-1.jpg" :alt="Product.name">
                     <div class="product-info">
-                        <span class="info_name">{{product.name}}</span>
+                        <span class="info_name">{{Product.name}}</span>
                         <span class="info_type">壽司</span>
                         <!--<p class="info_state">{{getStatusString(product.status)}}</p>-->
                     </div>
@@ -34,19 +38,27 @@
         </section>
         <section class="onboard-wrapper">
             <div class="title-wrap">
-                <h1>鮮魚</h1>
+                <h1>鮮魚 未售完</h1>
             </div>
             <div class="product-wrap">
-                <div class="product-card" v-if="product.status == false" v-for="product in Products">
-                    <img src="../../assets/demo-p-1.jpg" :alt="product.name">
+                <div class="product-card" v-if="!Product.isSaleOut" v-for="Product in showProducts">
+                    <img src="../../assets/demo-p-1.jpg" :alt="Product.name">
                     <div class="product-info">
-                        <span class="info_name">{{product.name}}</span>
+                        <span class="info_name">{{Product.name}}</span>
                         <span class="info_type">壽司</span>
                         <!--<p class="info_state">{{getStatusString(product.status)}}</p>-->
                     </div>
                 </div>
             </div>
         </section>
+
+        <h1>所有商品</h1>
+        <ul>
+            <li v-for="product in Products ">
+                <label>{{product.name}}</label>
+            </li>
+        </ul>
+
     </div>
     <footer>
         <span>台灣國際藏壽司股份有限公司 © kurasushi Taiwan, Inc. All rights reserved.</span>
@@ -64,23 +76,71 @@
         }
 
         var db = firebase.initializeApp(config).database()
-        var productRef = db.ref('Products')
-        var fishesRef = db.ref('Fishes')
-
+        var productRef = db.ref('KuraSushi_Products')
+        var branchRef = db.ref('KuraSushi_Branch')
         new Vue({
             el: '#app',
             data: {
-                newProductText: ''
+                newProductText: '',
+                branchName: 'A01',
+                branch_product: null,
+                currentBranch: {},
+                productList: null,
+                showProducts: [],
             },
             firebase: {
                 Products: productRef.limitToLast(25),
-                Fishes: fishesRef.limitToLast(25)
+                Branches: branchRef.limitToLast(25)
             },
             methods: {
-                updateStatus: function (product) {
-                    productRef.child(product['.key']).child('status').set(!product.status)
+                getBranchProduct() {
+                    this.showProducts = [];
+                    this.getCurrentBranch();
+                    if (this.currentBranch != undefined)
+                        this.setShowProducts();
                 },
-                getStatusString: function (status) {
+                getCurrentBranch() {
+                    var self = this;
+                    this.currentBranch = this.Branches.find(function (Branch) {
+                        return Branch.name == self.branchName;
+                    });
+                    if (this.currentBranch != undefined) {
+                        this.currentBranch.saleOutList = this.currentBranch.saleOutList.split(',');
+                    }
+                },
+                BranchList() {
+                    return this.Branches.map(x => x.name);
+                },
+                setBranchProduct() {
+                    this.productList = this.Branches[this.branchName];
+
+                },
+                InitBranchProduct() {
+                    branchRef.push({
+                        name: this.branchName,
+                        saleOutList: ""
+                    })
+                },
+                setShowProducts() {
+                    this.showProducts = this.Products.map(Product => ({
+                        id: Product.id,
+                        name: Product.name,
+                        type: Product.type,
+                        isSaleOut: this.currentBranch.saleOutList.includes(Product.id)
+                    }));
+                },
+                updateStatus(branch) {
+
+                    this.showProducts[this.showProducts.indexOf(branch)].isSaleOut = !this.showProducts[this.showProducts
+                        .indexOf(branch)].isSaleOut;
+                    var newList = this.showProducts.filter(function (product) {
+                        return product.isSaleOut;
+                    });
+
+                    var listString = newList.map(x => x.id).join();
+                    branchRef.child(this.currentBranch['.key']).child('saleOutList').set(listString)
+                },
+                getStatusString(status) {
                     if (status) {
                         return '完售'
                     } else {
