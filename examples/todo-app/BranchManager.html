@@ -2,74 +2,133 @@
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <title>VueFire Todo App Demo</title>
-  <script src="https://www.gstatic.com/firebasejs/4.11.0/firebase.js"></script>
-  <script src="https://unpkg.com/vue/dist/vue.js"></script>
-  <script src="../../dist/vuefire.js"></script>
+    <meta charset="utf-8">
+    <title>VueFire Todo App Demo</title>
+    <script src="https://www.gstatic.com/firebasejs/4.11.0/firebase.js"></script>
+    <script src="https://unpkg.com/vue/dist/vue.js"></script>
+    <script src="../../dist/vuefire.js"></script>
 </head>
 
 <body>
 
-  <div id="app">
-    <h1>已售完</h1>
-    <ul>
-      <li v-if="product.status == true" v-for="product in Products">
-        <label>{{product.name}}</label>
-        <label>{{getStatusString(product.status)}}</label>
-        <button @click="updateStatus(product)">X</button>
-      </li>
-    </ul>
-    <h1>鮮魚</h1>
-    <ul>
-      <li v-if="product.status == false" v-for="product in Products">
-        <label>{{product.name}}</label>
-        <label>{{getStatusString(product.status)}}</label>
-        <button @click="updateStatus(product)">X</button>
-      </li>
-    </ul>
+    <div id="app">
+        <div id="searchArea">
+            <input v-model.trim="branchName" placeholder="Branches Name ">
+            <button v-on:click="getBranchProduct">search</button>
+        </div>
+        <h1>已售完</h1>
+        <ul>
+            <li v-if="Product.isSaleOut" v-for="Product in showProducts">
+                <label>{{Product.name}}</label>
+                <button @click="updateStatus(Product)">X</button>
+            </li>
+        </ul>
+        <h1>未售完</h1>
+        <ul>
+            <li v-if="!Product.isSaleOut" v-for="Product in showProducts">
+                <label>{{Product.name}}</label>
+                <button @click="updateStatus(Product)">X</button>
+            </li>
+        </ul>
+        <h1>所有商品</h1>
+        <ul>
+            <li v-for="product in Products ">
+                <label>{{product.name}}</label>
+            </li>
+        </ul>
 
-  </div>
+    </div>
 
-  <script>
-    /* global Vue, firebase */
+    <script>
+        /* global Vue, firebase */
 
-    var config = {
-      apiKey: 'AIzaSyA9Ulhm28m7asgKRB_OEWkNWSyT3L9hseY',
-      authDomain: 'test-25e2a.firebaseapp.com',
-      databaseURL: 'https://test-25e2a.firebaseio.com',
-      projectId: 'test-25e2a',
-      storageBucket: 'test-25e2a.appspot.com',
-      messagingSenderId: '865495557037'
-    }
-
-    var db = firebase.initializeApp(config).database()
-    var productRef = db.ref('Products')
-    var fishesRef = db.ref('Fishes')
-
-    new Vue({
-      el: '#app',
-      data: {
-        newProductText: ''
-      },
-      firebase: {
-        Products: productRef.limitToLast(25),
-        Fishes: fishesRef.limitToLast(25)
-      },
-      methods: {
-        updateStatus: function (product) {
-          productRef.child(product['.key']).child('status').set(!product.status)
-        },
-        getStatusString: function (status) {
-          if (status) {
-            return '完售'
-          } else {
-            return '未完售'
-          }
+        var config = {
+            apiKey: 'AIzaSyA9Ulhm28m7asgKRB_OEWkNWSyT3L9hseY',
+            authDomain: 'test-25e2a.firebaseapp.com',
+            databaseURL: 'https://test-25e2a.firebaseio.com',
+            projectId: 'test-25e2a',
+            storageBucket: 'test-25e2a.appspot.com',
+            messagingSenderId: '865495557037'
         }
-      }
-    })
-  </script>
+
+        var db = firebase.initializeApp(config).database()
+        var productRef = db.ref('KuraSushi_Products')
+        var branchRef = db.ref('KuraSushi_Branch')
+        new Vue({
+            el: '#app',
+            data: {
+                newProductText: '',
+                branchName: 'A01',
+                branch_product: null,
+                currentBranch: {},
+                productList: null,
+                showProducts: [],
+            },
+            firebase: {
+                Products: productRef.limitToLast(25),
+                Branches: branchRef.limitToLast(25)
+            },
+            methods: {
+                getBranchProduct() {
+                    this.getCurrentBranch();
+                    this.setShowProducts();
+                },
+                getCurrentBranch() {
+                    var self = this;
+                    this.currentBranch = this.Branches.find(function (Branch) {
+                        return Branch.name == self.branchName;
+                    });
+                    if (this.currentBranch == undefined) {
+                        this.InitBranchProduct();
+                        var self = this;
+                        this.currentBranch = this.Branches.find(function (Branch) {
+                            return Branch.name == self.branchName;
+                        });
+                    }
+                    this.currentBranch.saleOutList = this.currentBranch.saleOutList.split(',');
+                },
+                BranchList() {
+                    return this.Branches.map(x => x.name);
+                },
+                setBranchProduct() {
+                    this.productList = this.Branches[this.branchName];
+
+                },
+                InitBranchProduct() {
+                    branchRef.push({
+                        name: this.branchName,
+                        saleOutList: ""
+                    })
+                },
+                setShowProducts() {
+                    this.showProducts = this.Products.map(Product => ({
+                        id: Product.id,
+                        name: Product.name,
+                        type: Product.type,
+                        isSaleOut: this.currentBranch.saleOutList.includes(Product.id)
+                    }));
+                },
+                updateStatus(branch) {
+
+                    this.showProducts[this.showProducts.indexOf(branch)].isSaleOut = !this.showProducts[this.showProducts
+                        .indexOf(branch)].isSaleOut;
+                    var newList = this.showProducts.filter(function (product) {
+                        return product.isSaleOut;
+                    });
+
+                    var listString = newList.map(x => x.id).join();
+                    branchRef.child(this.currentBranch['.key']).child('saleOutList').set(listString)
+                },
+                getStatusString(status) {
+                    if (status) {
+                        return '完售'
+                    } else {
+                        return '未完售'
+                    }
+                }
+            }
+        })
+    </script>
 </body>
 
 </html>

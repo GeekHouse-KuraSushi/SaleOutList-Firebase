@@ -1,92 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8">
-  <title>藏壽司 | くら寿司 Kura Sushi</title>  
-  <link rel="stylesheet" href="../../src/css/branch-display.css">
-  <script src="https://www.gstatic.com/firebasejs/4.11.0/firebase.js"></script>
-  <script src="https://unpkg.com/vue/dist/vue.js"></script>
-  <script src="../../dist/vuefire.js"></script>
+    <meta charset="utf-8">
+    <title>藏壽司 | くら寿司 Kura Sushi</title>
+    <link rel="stylesheet" href="../../src/css/branch-display.css">
+    <script src="https://www.gstatic.com/firebasejs/4.11.0/firebase.js"></script>
+    <script src="https://unpkg.com/vue/dist/vue.js"></script>
+    <script src="../../dist/vuefire.js"></script>
 </head>
+
 <body>
-  <header>
-    <div class="logo-wrapper">
-      <img id="logo" src="../../assets/logo.png" alt="藏壽司Logo">
-    </div>
-  </header>
-  <div id="app">
-    <section class="sold-out-wrapper">
-      <div class="title-wrap">
-        <h1>本日已售完</h1>
-      </div>
-      <div class="product-wrap">
-        <div class="product-card" v-if="product.status == true" v-for="product in Products">
-          <img src="../../assets/demo-p-1.jpg" :alt="product.name">
-          <div class="product-info">
-            <span class="info_name">{{product.name}}</span>
-            <span class="info_type">壽司</span>
-            <!--<p class="info_state">{{getStatusString(product.status)}}</p>-->
-          </div>
+    <header>
+        <div class="logo-wrapper">
+            <img id="logo" src="../../assets/logo.png" alt="藏壽司Logo">
         </div>
-      </div>
-    </section>
-    <section class="onboard-wrapper">
-        <div class="title-wrap">
-          <h1>鮮魚</h1>
+    </header>
+    <div id="app">
+        <div id="searchArea">
+            <input v-model.trim="branchName" placeholder="Branches Name ">
+            <button v-on:click="getBranchProduct">search</button>
         </div>
-        <div class="product-wrap">
-          <div class="product-card" v-if="product.status == false" v-for="product in Products">
-            <img src="../../assets/demo-p-1.jpg" :alt="product.name">
-            <div class="product-info">
-              <span class="info_name">{{product.name}}</span>
-              <span class="info_type">壽司</span>
-              <!--<p class="info_state">{{getStatusString(product.status)}}</p>-->
+        <section class="sold-out-wrapper">
+            <div class="title-wrap">
+                <h1>本日已售完</h1>
             </div>
-          </div>
-        </div>
-    </section>
-  </div>
-  <footer>
-    <span>台灣國際藏壽司股份有限公司 © kurasushi Taiwan, Inc. All rights reserved.</span>
-  </footer>
-  <script>
-    /* global Vue, firebase */
+            <div class="product-wrap">
+                <div class="product-card" v-if="Product.isSaleOut" v-for="Product in showProducts">
+                    <img src="../../assets/demo-p-1.jpg" :alt="Product.name">
+                    <div class="product-info">
+                        <span class="info_name">{{Product.name}}</span>
+                        <span class="info_type">壽司</span>
+                        <!--<p class="info_state">{{getStatusString(product.status)}}</p>-->
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="onboard-wrapper">
+            <div class="title-wrap">
+                <h1>鮮魚 未售完</h1>
+            </div>
+            <div class="product-wrap">
+                <div class="product-card" v-if="!Product.isSaleOut" v-for="Product in showProducts">
+                    <img src="../../assets/demo-p-1.jpg" :alt="Product.name">
+                    <div class="product-info">
+                        <span class="info_name">{{Product.name}}</span>
+                        <span class="info_type">壽司</span>
+                        <!--<p class="info_state">{{getStatusString(product.status)}}</p>-->
+                    </div>
+                </div>
+            </div>
+        </section>
 
-    var config = {
-      apiKey: 'AIzaSyA9Ulhm28m7asgKRB_OEWkNWSyT3L9hseY',
-      authDomain: 'test-25e2a.firebaseapp.com',
-      databaseURL: 'https://test-25e2a.firebaseio.com',
-      projectId: 'test-25e2a',
-      storageBucket: 'test-25e2a.appspot.com',
-      messagingSenderId: '865495557037'
-    }
+        <h1>所有商品</h1>
+        <ul>
+            <li v-for="product in Products ">
+                <label>{{product.name}}</label>
+            </li>
+        </ul>
 
-    var db = firebase.initializeApp(config).database()
-    var productRef = db.ref('Products')
-    var fishesRef = db.ref('Fishes')
+    </div>
+    <footer>
+        <span>台灣國際藏壽司股份有限公司 © kurasushi Taiwan, Inc. All rights reserved.</span>
+    </footer>
+    <script>
+        /* global Vue, firebase */
 
-    new Vue({
-      el: '#app',
-      data: {
-        newProductText: ''
-      },
-      firebase: {
-        Products: productRef.limitToLast(25),
-        Fishes: fishesRef.limitToLast(25)
-      },
-      methods: {
-        updateStatus: function (product) {
-          productRef.child(product['.key']).child('status').set(!product.status)
-        },
-        getStatusString: function (status) {
-          if (status) {
-            return '完售'
-          } else {
-            return '未完售'
-          }
+        var config = {
+            apiKey: 'AIzaSyA9Ulhm28m7asgKRB_OEWkNWSyT3L9hseY',
+            authDomain: 'test-25e2a.firebaseapp.com',
+            databaseURL: 'https://test-25e2a.firebaseio.com',
+            projectId: 'test-25e2a',
+            storageBucket: 'test-25e2a.appspot.com',
+            messagingSenderId: '865495557037'
         }
-      }
-    })
-  </script>
+
+        var db = firebase.initializeApp(config).database()
+        var productRef = db.ref('KuraSushi_Products')
+        var branchRef = db.ref('KuraSushi_Branch')
+        new Vue({
+            el: '#app',
+            data: {
+                newProductText: '',
+                branchName: 'A01',
+                branch_product: null,
+                currentBranch: {},
+                productList: null,
+                showProducts: [],
+            },
+            firebase: {
+                Products: productRef.limitToLast(25),
+                Branches: branchRef.limitToLast(25)
+            },
+            methods: {
+                getBranchProduct() {
+                    this.showProducts = [];
+                    this.getCurrentBranch();
+                    if (this.currentBranch != undefined)
+                        this.setShowProducts();
+                },
+                getCurrentBranch() {
+                    var self = this;
+                    this.currentBranch = this.Branches.find(function (Branch) {
+                        return Branch.name == self.branchName;
+                    });
+                    if (this.currentBranch != undefined) {
+                        this.currentBranch.saleOutList = this.currentBranch.saleOutList.split(',');
+                    }
+                },
+                BranchList() {
+                    return this.Branches.map(x => x.name);
+                },
+                setBranchProduct() {
+                    this.productList = this.Branches[this.branchName];
+
+                },
+                InitBranchProduct() {
+                    branchRef.push({
+                        name: this.branchName,
+                        saleOutList: ""
+                    })
+                },
+                setShowProducts() {
+                    this.showProducts = this.Products.map(Product => ({
+                        id: Product.id,
+                        name: Product.name,
+                        type: Product.type,
+                        isSaleOut: this.currentBranch.saleOutList.includes(Product.id)
+                    }));
+                },
+                updateStatus(branch) {
+
+                    this.showProducts[this.showProducts.indexOf(branch)].isSaleOut = !this.showProducts[this.showProducts
+                        .indexOf(branch)].isSaleOut;
+                    var newList = this.showProducts.filter(function (product) {
+                        return product.isSaleOut;
+                    });
+
+                    var listString = newList.map(x => x.id).join();
+                    branchRef.child(this.currentBranch['.key']).child('saleOutList').set(listString)
+                },
+                getStatusString(status) {
+                    if (status) {
+                        return '完售'
+                    } else {
+                        return '未完售'
+                    }
+                }
+            }
+        })
+    </script>
 </body>
+
 </html>
