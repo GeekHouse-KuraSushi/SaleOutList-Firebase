@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="utf-8">
-    <title>VueFire Todo App Demo</title>
+    <title>藏壽司 | 庫存控管後台</title>
+    <link rel="stylesheet" href="../../src/css/branch-manager.css">
     <script src="https://www.gstatic.com/firebasejs/4.11.0/firebase.js"></script>
     <script src="https://unpkg.com/vue/dist/vue.js"></script>
     <script src="../../dist/vuefire.js"></script>
@@ -12,30 +13,37 @@
 <body>
 
     <div id="app">
+        <h1 class="page-title">藏壽司-商品管理後台</h1>
         <div id="searchArea">
             <input v-model.trim="branchName" placeholder="Branches Name ">
             <button v-on:click="getBranchProduct">search</button>
         </div>
-        <h1>已售完</h1>
-        <ul>
-            <li v-if="Product.isSaleOut" v-for="Product in showProducts">
-                <label>{{Product.name}}</label>
-                <button @click="updateStatus(Product)">X</button>
-            </li>
-        </ul>
-        <h1>未售完</h1>
-        <ul>
-            <li v-if="!Product.isSaleOut" v-for="Product in showProducts">
-                <label>{{Product.name}}</label>
-                <button @click="updateStatus(Product)">X</button>
-            </li>
-        </ul>
-        <h1>所有商品</h1>
-        <ul>
-            <li v-for="product in Products ">
-                <label>{{product.name}}</label>
-            </li>
-        </ul>
+
+        <section id="control-wrapper">
+            <section id="onsale-wrapper">
+                <h1>已售完</h1>
+                <ul>
+                    <li v-if="Product.isSaleOut" v-for="Product in showProducts">
+                        <label @click="updateStatus(Product)">{{Product.name}}</label>
+                    </li>
+                </ul>
+            </section>
+            <section id="soldout-wrapper">
+                <h1>未售完</h1>
+                <ul>
+                    <li v-if="!Product.isSaleOut" v-for="Product in showProducts">
+                        <label @click="updateStatus(Product)">{{Product.name}}</label>
+                    </li>
+                </ul>
+            </section>
+        </section>
+        <section id="all-product-wrapper">
+            <h1>所有商品</h1>
+            <div id="product-pills-wrapper">
+                <label v-for="product in Products">{{product.name}}</label>
+            </div>
+
+        </section>
 
     </div>
 
